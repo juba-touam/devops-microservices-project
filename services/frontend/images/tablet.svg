@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 280" fill="none">
+  <rect width="400" height="280" rx="8" fill="#e8edf3"/>
+  <!-- Tablet body -->
+  <rect x="100" y="30" width="200" height="220" rx="14" fill="#1a1a2e"/>
+  <rect x="110" y="44" width="180" height="188" rx="4" fill="#2d2d5e"/>
+  <!-- Camera -->
+  <circle cx="200" cy="37" r="3" fill="#444"/>
+  <!-- Screen content - grid -->
+  <rect x="122" y="56" width="76" height="56" rx="6" fill="#6c63ff" opacity="0.35"/>
+  <rect x="206" y="56" width="76" height="56" rx="6" fill="#8b85ff" opacity="0.25"/>
+  <rect x="122" y="120" width="76" height="56" rx="6" fill="#8b85ff" opacity="0.25"/>
+  <rect x="206" y="120" width="76" height="56" rx="6" fill="#6c63ff" opacity="0.35"/>
+  <!-- Navigation bar -->
+  <rect x="122" y="188" width="160" height="6" rx="3" fill="#6c63ff" opacity="0.2"/>
+  <rect x="122" y="200" width="40" height="20" rx="4" fill="#6c63ff" opacity="0.4"/>
+  <rect x="170" y="200" width="40" height="20" rx="4" fill="#8b85ff" opacity="0.2"/>
+  <!-- Home indicator -->
+  <rect x="180" y="238" width="40" height="4" rx="2" fill="#444"/>
+</svg>

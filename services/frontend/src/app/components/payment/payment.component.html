@@ -1,0 +1,25 @@
+@if (loading) {
+  <div class="loading">Traitement du paiement...</div>
+}
+
+@if (payment) {
+  <div class="payment-result">
+    <div class="icon">{{ success ? '\u2714' : '\u2718' }}</div>
+    <h2>{{ success ? 'Paiement r\u00e9ussi !' : 'Paiement \u00e9chou\u00e9' }}</h2>
+    <div class="details">
+      <p>Identifiant : {{ payment.id }}</p>
+      <p>Montant : {{ payment.amount.toFixed(2) }} {{ payment.currency }}</p>
+      <p>Statut : {{ payment.status }}</p>
+    </div>
+    <button class="btn-continue" (click)="goToCatalogue()">Continuer mes achats</button>
+  </div>
+}
+
+@if (error) {
+  <div class="payment-result">
+    <div class="icon">&#10008;</div>
+    <h2>Erreur</h2>
+    <p>Impossible de contacter le service de paiement.</p>
+    <button class="btn-continue" (click)="goToCart()">Retour au panier</button>
+  </div>
+}

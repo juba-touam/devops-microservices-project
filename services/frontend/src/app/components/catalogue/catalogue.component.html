@@ -1,0 +1,36 @@
+@if (loading) {
+  <div class="loading">Chargement du catalogue...</div>
+}
+
+@if (error) {
+  <div class="loading">Erreur de chargement du catalogue.</div>
+}
+
+<div class="products-grid">
+  @for (product of products; track product.id) {
+    <div class="product-card">
+      <img [src]="product.image || 'https://placehold.co/300x200/e2e8f0/475569?text=Product'" [alt]="product.name">
+      <div class="info">
+        <h3>{{ product.name }}</h3>
+        <div class="category">{{ product.category }}</div>
+        <div class="price">{{ product.price.toFixed(2) }} &euro;</div>
+        <div class="stock">
+          @if (product.stock > 0) {
+            En stock ({{ product.stock }})
+          } @else {
+            Rupture de stock
+          }
+        </div>
+        <button (click)="addToCart(product)" [disabled]="!canAdd(product)">
+          @if (getCartQty(product.id) > 0) {
+            Ajouter encore ({{ getCartQty(product.id) }} dans le panier)
+          } @else {
+            Ajouter au panier
+          }
+        </button>
+      </div>
+    </div>
+  }
+</div>
+
+<div class="toast" [class.show]="toastVisible">{{ toastMessage }}</div>

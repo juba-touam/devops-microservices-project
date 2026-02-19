@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 280" fill="none">
+  <rect width="400" height="280" rx="8" fill="#e8edf3"/>
+  <!-- Screen -->
+  <rect x="80" y="40" width="240" height="150" rx="8" fill="#1a1a2e"/>
+  <rect x="88" y="48" width="224" height="134" rx="4" fill="#2d2d5e"/>
+  <!-- Screen content -->
+  <rect x="104" y="68" width="80" height="8" rx="4" fill="#6c63ff" opacity="0.7"/>
+  <rect x="104" y="84" width="120" height="6" rx="3" fill="#8b85ff" opacity="0.4"/>
+  <rect x="104" y="96" width="100" height="6" rx="3" fill="#8b85ff" opacity="0.4"/>
+  <rect x="104" y="108" width="140" height="6" rx="3" fill="#8b85ff" opacity="0.4"/>
+  <rect x="104" y="128" width="60" height="24" rx="6" fill="#6c63ff" opacity="0.6"/>
+  <rect x="256" y="68" width="40" height="40" rx="6" fill="#6c63ff" opacity="0.3"/>
+  <!-- Base -->
+  <path d="M60 190 L80 190 L80 195 Q80 200 85 200 L315 200 Q320 200 320 195 L320 190 L340 190 L350 210 Q352 216 346 216 L54 216 Q48 216 50 210 Z" fill="#c0c8d4"/>
+  <ellipse cx="200" cy="195" rx="30" ry="3" fill="#a8b2c0"/>
+  <!-- Keyboard dots -->
+  <rect x="120" y="195" width="160" height="2" rx="1" fill="#a8b2c0" opacity="0.5"/>
+</svg>

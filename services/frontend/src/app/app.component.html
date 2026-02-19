@@ -1,0 +1,18 @@
+<header>
+  <h1>E-Commerce</h1>
+  <nav>
+    <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Catalogue</a>
+    <a routerLink="/cart" routerLinkActive="active">
+      Panier
+      @if (cartService.getItemCount() > 0) {
+        <span class="cart-badge">{{ cartService.getItemCount() }}</span>
+      }
+    </a>
+  </nav>
+</header>
+
+<div class="container">
+  <router-outlet></router-outlet>
+</div>
+
+<div class="toast" id="toast"></div>

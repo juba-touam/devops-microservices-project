@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 280" fill="none">
+  <rect width="400" height="280" rx="8" fill="#e8edf3"/>
+  <!-- Headband -->
+  <path d="M120 160 Q120 60 200 56 Q280 60 280 160" stroke="#1a1a2e" stroke-width="14" stroke-linecap="round" fill="none"/>
+  <!-- Inner headband -->
+  <path d="M130 160 Q130 76 200 72 Q270 76 270 160" stroke="#2d2d5e" stroke-width="6" stroke-linecap="round" fill="none"/>
+  <!-- Left ear cup -->
+  <rect x="100" y="140" width="44" height="72" rx="22" fill="#1a1a2e"/>
+  <rect x="106" y="148" width="32" height="56" rx="16" fill="#2d2d5e"/>
+  <circle cx="122" cy="176" r="10" fill="#6c63ff" opacity="0.4"/>
+  <!-- Right ear cup -->
+  <rect x="256" y="140" width="44" height="72" rx="22" fill="#1a1a2e"/>
+  <rect x="262" y="148" width="32" height="56" rx="16" fill="#2d2d5e"/>
+  <circle cx="278" cy="176" r="10" fill="#6c63ff" opacity="0.4"/>
+  <!-- Cushion details -->
+  <ellipse cx="122" cy="176" rx="14" ry="20" stroke="#444" stroke-width="1.5" fill="none"/>
+  <ellipse cx="278" cy="176" rx="14" ry="20" stroke="#444" stroke-width="1.5" fill="none"/>
+</svg>

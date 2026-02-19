@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 280" fill="none">
+  <rect width="400" height="280" rx="8" fill="#e8edf3"/>
+  <!-- Phone body -->
+  <rect x="148" y="28" width="104" height="224" rx="16" fill="#1a1a2e"/>
+  <rect x="154" y="44" width="92" height="180" rx="4" fill="#2d2d5e"/>
+  <!-- Notch -->
+  <rect x="180" y="32" width="40" height="8" rx="4" fill="#2d2d5e"/>
+  <!-- Screen content -->
+  <rect x="164" y="60" width="72" height="72" rx="8" fill="#6c63ff" opacity="0.3"/>
+  <circle cx="200" cy="96" r="20" fill="#6c63ff" opacity="0.5"/>
+  <rect x="164" y="142" width="50" height="6" rx="3" fill="#8b85ff" opacity="0.5"/>
+  <rect x="164" y="154" width="72" height="5" rx="2.5" fill="#8b85ff" opacity="0.3"/>
+  <rect x="164" y="164" width="60" height="5" rx="2.5" fill="#8b85ff" opacity="0.3"/>
+  <rect x="164" y="182" width="72" height="20" rx="10" fill="#6c63ff" opacity="0.5"/>
+  <!-- Home button -->
+  <rect x="186" y="230" width="28" height="4" rx="2" fill="#444"/>
+</svg>

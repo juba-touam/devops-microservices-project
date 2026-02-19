@@ -1,0 +1,41 @@
+@if (items.length === 0) {
+  <div class="cart-empty">
+    <p>Votre panier est vide.</p>
+    <p style="margin-top:0.5rem">
+      <button class="btn-pay" (click)="goToCatalogue()">Parcourir le catalogue</button>
+    </p>
+  </div>
+} @else {
+  <table class="cart-table">
+    <thead>
+      <tr>
+        <th>Produit</th>
+        <th>Prix unitaire</th>
+        <th>Quantit&eacute;</th>
+        <th>Sous-total</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (item of items; track item.id) {
+        <tr>
+          <td>{{ item.name }}</td>
+          <td>{{ item.price.toFixed(2) }} &euro;</td>
+          <td>
+            <div class="qty-controls">
+              <button (click)="changeQty(item.id, -1)">-</button>
+              <span>{{ item.quantity }}</span>
+              <button (click)="changeQty(item.id, 1)">+</button>
+            </div>
+          </td>
+          <td>{{ (item.price * item.quantity).toFixed(2) }} &euro;</td>
+          <td><button class="remove-btn" (click)="removeItem(item.id)">Supprimer</button></td>
+        </tr>
+      }
+    </tbody>
+  </table>
+  <div class="cart-summary">
+    <div class="total">Total : {{ total.toFixed(2) }} &euro;</div>
+    <button class="btn-pay" (click)="processPayment()">Payer</button>
+  </div>
+}
