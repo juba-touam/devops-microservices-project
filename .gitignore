@@ -27,6 +27,12 @@ __pycache__/
 venv/
 *.egg-info/
 
+# Terraform
+infra/.terraform/
+infra/terraform.tfstate
+infra/terraform.tfstate.backup
+*.tfvars
+
 # Environment
 .env
 *.log
