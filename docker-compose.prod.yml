@@ -1,0 +1,55 @@
+services:
+  mongo:
+    image: mongo:7
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - microservices
+
+  catalogue:
+    image: jubatouam/catalogue:${IMAGE_TAG}
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mongo
+    networks:
+      - microservices
+
+  payment:
+    image: jubatouam/payment:${IMAGE_TAG}
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mongo
+      - notification
+    networks:
+      - microservices
+
+  notification:
+    image: jubatouam/notification:${IMAGE_TAG}
+    ports:
+      - "3001:3001"
+    depends_on:
+      - mongo
+    networks:
+      - microservices
+
+  frontend:
+    image: jubatouam/frontend:${IMAGE_TAG}
+    ports:
+      - "4200:80"
+    depends_on:
+      - catalogue
+      - payment
+      - notification
+    networks:
+      - microservices
+
+networks:
+  microservices:
+    driver: bridge
+
+volumes:
+  mongo-data:
