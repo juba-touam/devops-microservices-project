@@ -13,8 +13,6 @@ provider "aws" {
   region = var.aws_region
 }
 
-# --- VPC ---
-
 resource "aws_vpc" "main" {
   cidr_block           = "10.0.0.0/16"
   enable_dns_support   = true
@@ -24,8 +22,6 @@ resource "aws_vpc" "main" {
     Name = "microservices-vpc"
   }
 }
-
-# --- Subnet public ---
 
 resource "aws_subnet" "public" {
   vpc_id                  = aws_vpc.main.id
@@ -38,8 +34,6 @@ resource "aws_subnet" "public" {
   }
 }
 
-# --- Internet Gateway ---
-
 resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.main.id
 
@@ -47,8 +41,6 @@ resource "aws_internet_gateway" "igw" {
     Name = "microservices-igw"
   }
 }
-
-# --- Route Table ---
 
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.main.id
@@ -68,7 +60,6 @@ resource "aws_route_table_association" "public" {
   route_table_id = aws_route_table.public.id
 }
 
-# --- Security Group ---
 
 resource "aws_security_group" "ec2_sg" {
   name        = "microservices-sg"
@@ -135,7 +126,6 @@ resource "aws_security_group" "ec2_sg" {
   }
 }
 
-# --- AMI Ubuntu 22.04 LTS ---
 
 data "aws_ami" "ubuntu" {
   most_recent = true
@@ -163,33 +153,7 @@ resource "aws_instance" "microservices" {
 
   associate_public_ip_address = true
 
-  user_data = <<-EOF
-    #!/bin/bash
-    set -e
-
-    apt-get update -y
-    apt-get install -y ca-certificates curl gnupg
-
-    # Install Docker
-    install -m 0755 -d /etc/apt/keyrings
-    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-    chmod a+r /etc/apt/keyrings/docker.gpg
-
-    echo \
-      "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
-      $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
-      tee /etc/apt/sources.list.d/docker.list > /dev/null
-
-    apt-get update -y
-    apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-
-    # Enable and start Docker
-    systemctl enable docker
-    systemctl start docker
-
-    # Add ubuntu user to docker group
-    usermod -aG docker ubuntu
-  EOF
+  user_data = file("${path.module}/scripts/user_data.sh")
 
   root_block_device {
     volume_size = 20
