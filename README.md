@@ -142,13 +142,16 @@ terraform destroy -var="key_name=<votre-key-pair>"
 ├── infra/
 │   ├── main.tf              # Infrastructure AWS
 │   ├── variables.tf         # Variables Terraform
-│   └── outputs.tf           # Outputs (IP, DNS, etc.)
+│   ├── outputs.tf           # Outputs (IP, DNS, etc.)
+│   └── scripts/
+│       └── user_data.sh     # Script d'initialisation EC2
 ├── services/
 │   ├── catalogue/           # Java Spring Boot
 │   ├── payment/             # Python FastAPI
 │   ├── notification/        # Node.js Express
 │   └── frontend/            # Angular 17 + Nginx
 ├── docker-compose.yml       # Orchestration locale
+├── docker-compose.prod.yml  # Orchestration production
 └── sonar-project.properties # Config SonarCloud
 ```
 
