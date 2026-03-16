@@ -4,6 +4,7 @@ import com.example.catalogue.model.Product;
 import com.example.catalogue.repository.ProductRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.ResponseEntity;
 
 import java.util.Collections;
 import java.util.List;
@@ -54,19 +55,17 @@ class ProductControllerTest {
         Product p = new Product(1, "Laptop", "Electronics", 999.99, 50, "/images/laptop.svg");
         when(productRepository.findById(1)).thenReturn(Optional.of(p));
 
-        Object result = controller.getCatalogueItem(1);
-        assertInstanceOf(Product.class, result);
-        assertEquals("Laptop", ((Product) result).getName());
+        ResponseEntity<?> result = controller.getCatalogueItem(1);
+        assertEquals(200, result.getStatusCode().value());
+        assertInstanceOf(Product.class, result.getBody());
+        assertEquals("Laptop", ((Product) result.getBody()).getName());
     }
 
     @Test
     void getCatalogueItem_notFound() {
         when(productRepository.findById(99)).thenReturn(Optional.empty());
 
-        Object result = controller.getCatalogueItem(99);
-        assertInstanceOf(Map.class, result);
-        @SuppressWarnings("unchecked")
-        Map<String, String> map = (Map<String, String>) result;
-        assertEquals("Item not found", map.get("error"));
+        ResponseEntity<?> result = controller.getCatalogueItem(99);
+        assertEquals(404, result.getStatusCode().value());
     }
 }
