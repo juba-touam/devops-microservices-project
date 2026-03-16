@@ -111,6 +111,20 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: coverage-reports
+          path: .
+
+      - name: Compile Java classes for SonarCloud
+        run: mvn compile -f services/catalogue/pom.xml -q
+
+      - name: Verify coverage reports
+        run: |
+          echo "=== Coverage files ==="
+          ls -la services/catalogue/target/site/jacoco/jacoco.xml 2>/dev/null && echo "JaCoCo OK" || echo "JaCoCo MISSING"
+          ls -la services/payment/coverage.xml 2>/dev/null && echo "Python OK" || echo "Python MISSING"
+          ls -la services/notification/coverage/lcov.info 2>/dev/null && echo "Notification OK" || echo "Notification MISSING"
+          ls -la services/frontend/coverage/lcov.info 2>/dev/null && echo "Frontend OK" || echo "Frontend MISSING"
+          echo "=== Java classes ==="
+          ls services/catalogue/target/classes/com/example/catalogue/ 2>/dev/null || echo "Classes MISSING"
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarqube-scan-action@v6
