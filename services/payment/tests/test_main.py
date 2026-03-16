@@ -13,6 +13,10 @@ with patch("pymongo.MongoClient", return_value=mock_mongo_client):
     sys.modules.pop("app.main", None)
     from fastapi.testclient import TestClient
     from app.main import app
+    import app.main as app_module
+
+# Ensure the app uses our mock collection
+app_module.payments_collection = mock_collection
 
 client = TestClient(app)
 
