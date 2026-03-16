@@ -5,7 +5,7 @@ import { CartItem } from '../models/product.model';
 @Injectable({ providedIn: 'root' })
 export class CartService {
   private items: CartItem[] = [];
-  private itemsSubject = new BehaviorSubject<CartItem[]>([]);
+  private readonly itemsSubject = new BehaviorSubject<CartItem[]>([]);
 
   items$ = this.itemsSubject.asObservable();
 

@@ -24,9 +24,9 @@ export class PaymentComponent implements OnInit {
   error = false;
 
   constructor(
-    private http: HttpClient,
-    private cartService: CartService,
-    private router: Router
+    private readonly http: HttpClient,
+    private readonly cartService: CartService,
+    private readonly router: Router
   ) {}
 
   ngOnInit(): void {
