@@ -5,7 +5,7 @@ import { Product } from '../models/product.model';
 
 @Injectable({ providedIn: 'root' })
 export class CatalogueService {
-  constructor(private http: HttpClient) {}
+  constructor(private readonly http: HttpClient) {}
 
   getProducts(): Observable<Product[]> {
     return this.http.get<Product[]>('/api/catalogue/catalogue');
