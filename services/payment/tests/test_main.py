@@ -85,7 +85,7 @@ class TestCreatePayment:
     @patch("app.main.uuid.uuid4", return_value="test-uuid-2")
     def test_notification_failure(self, _mock_uuid, mock_httpx_cls):
         mock_http = MagicMock()
-        mock_http.post.side_effect = Exception("connection refused")
+        mock_http.post.side_effect = OSError("connection refused")
         mock_httpx_cls.return_value.__enter__ = MagicMock(return_value=mock_http)
         mock_httpx_cls.return_value.__exit__ = MagicMock(return_value=False)
 

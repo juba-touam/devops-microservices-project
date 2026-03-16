@@ -1,20 +1,25 @@
+import logging
+import os
+import uuid
+
+import httpx
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional, List
-import uuid
-import httpx
-import os
 from pymongo import MongoClient
+
+logger = logging.getLogger(__name__)
 
 NOTIFICATION_URL = os.getenv("NOTIFICATION_URL", "http://notification:3001")
 MONGO_URI = os.getenv("MONGO_URI", "mongodb://mongo:27017")
+ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:4200,http://localhost:8080").split(",")
 
 app = FastAPI(title="Payment Service")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -86,7 +91,7 @@ def create_payment(payment: PaymentRequest):
                 f"{NOTIFICATION_URL}/api/notifications",
                 json=notification_payload,
             )
-    except Exception as e:
-        print(f"[WARN] Failed to notify: {e}")
+    except (httpx.HTTPError, httpx.TimeoutException, OSError) as e:
+        logger.warning("Failed to notify: %s", e)
 
     return notification_payload
