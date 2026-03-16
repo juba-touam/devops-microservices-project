@@ -33,10 +33,9 @@ jobs:
           python-version: '3.12'
 
       - name: Payment — Run tests with pytest-cov
-        working-directory: services/payment
         run: |
-          pip install -r requirements.txt
-          python -m pytest tests --cov=app --cov-report=xml:coverage.xml -v
+          pip install -r services/payment/requirements.txt
+          python -m pytest services/payment/tests --cov=services/payment/app --cov-report=xml:services/payment/coverage.xml -v
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
