@@ -1,5 +1,6 @@
 from unittest.mock import patch, MagicMock
 import sys
+import pytest
 
 # Patch MongoClient before importing the app module (it connects at import time)
 mock_mongo_client = MagicMock()
@@ -15,10 +16,14 @@ with patch("pymongo.MongoClient", return_value=mock_mongo_client):
     from app.main import app
     import app.main as app_module
 
-# Ensure the app uses our mock collection
-app_module.payments_collection = mock_collection
-
 client = TestClient(app)
+
+
+@pytest.fixture(autouse=True)
+def _reset_mock_collection():
+    """Reset mock collection before each test to avoid interference from integration tests."""
+    app_module.payments_collection = mock_collection
+    mock_collection.reset_mock()
 
 
 class TestHealth:
