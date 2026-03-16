@@ -45,12 +45,14 @@ jobs:
           cd services/notification
           npm ci
           npx jest app.test.js --coverage --coverageReporters=lcov --forceExit --detectOpenHandles
+          sed -i 's|SF:src/|SF:services/notification/src/|g' coverage/lcov.info
 
       - name: Frontend — Run unit tests with Jest coverage
         run: |
           cd services/frontend
           npm ci
-          npx jest --coverage
+          npx jest --coverage --coverageReporters=lcov
+          sed -i 's|SF:src/|SF:services/frontend/src/|g' coverage/lcov.info
 
       - name: Upload coverage reports
         uses: actions/upload-artifact@v4
