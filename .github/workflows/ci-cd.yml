@@ -113,20 +113,24 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: coverage-reports
-          path: .
+          path: services
 
       - name: Compile Java classes for SonarCloud
         run: mvn compile -f services/catalogue/pom.xml -q
 
       - name: Verify coverage reports
         run: |
+          echo "=== Downloaded artifact contents ==="
+          find services -name "jacoco.xml" -o -name "coverage.xml" -o -name "lcov.info" 2>/dev/null
           echo "=== Coverage files ==="
-          ls -la services/catalogue/target/site/jacoco/jacoco.xml 2>/dev/null && echo "JaCoCo OK" || echo "JaCoCo MISSING"
-          ls -la services/payment/coverage.xml 2>/dev/null && echo "Python OK" || echo "Python MISSING"
-          ls -la services/notification/coverage/lcov.info 2>/dev/null && echo "Notification OK" || echo "Notification MISSING"
-          ls -la services/frontend/coverage/lcov.info 2>/dev/null && echo "Frontend OK" || echo "Frontend MISSING"
+          ls -la services/catalogue/target/site/jacoco/jacoco.xml && echo "JaCoCo OK" || echo "JaCoCo MISSING"
+          ls -la services/payment/coverage.xml && echo "Python OK" || echo "Python MISSING"
+          ls -la services/notification/coverage/lcov.info && echo "Notification OK" || echo "Notification MISSING"
+          ls -la services/frontend/coverage/lcov.info && echo "Frontend OK" || echo "Frontend MISSING"
           echo "=== Java classes ==="
-          ls services/catalogue/target/classes/com/example/catalogue/ 2>/dev/null || echo "Classes MISSING"
+          ls services/catalogue/target/classes/com/example/catalogue/ || echo "Classes MISSING"
+          echo "=== Notification lcov.info paths ==="
+          head -5 services/notification/coverage/lcov.info || true
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarqube-scan-action@v6
