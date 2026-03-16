@@ -217,10 +217,48 @@ jobs:
           cache-from: type=gha,scope=notification
           cache-to: type=gha,mode=max,scope=notification
 
+  trivy-scan:
+    name: Trivy Security Scan
+    runs-on: ubuntu-latest
+    needs: build-push
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - name: Scan Catalogue Image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: jubatouam/catalogue:${{ github.sha }}
+          severity: CRITICAL,HIGH
+          exit-code: 1
+          format: table
+
+      - name: Scan Frontend Image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: jubatouam/frontend:${{ github.sha }}
+          severity: CRITICAL,HIGH
+          exit-code: 1
+          format: table
+
+      - name: Scan Payment Image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: jubatouam/payment:${{ github.sha }}
+          severity: CRITICAL,HIGH
+          exit-code: 1
+          format: table
+
+      - name: Scan Notification Image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: jubatouam/notification:${{ github.sha }}
+          severity: CRITICAL,HIGH
+          exit-code: 1
+          format: table
+
   deploy-ec2:
     name: Deploy to EC2
     runs-on: ubuntu-latest
-    needs: build-push
+    needs: trivy-scan
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
