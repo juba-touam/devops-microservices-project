@@ -6,7 +6,9 @@ COPY src ./src
 RUN mvn package -DskipTests -B
 
 FROM eclipse-temurin:17-jre
+RUN groupadd -r appuser && useradd -r -g appuser appuser
 WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
+USER appuser
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.jar"]
