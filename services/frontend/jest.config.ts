@@ -5,4 +5,6 @@ export default {
   moduleNameMapper: {
     '^@angular/core$': '<rootDir>/src/__mocks__/@angular/core.ts',
   },
+  collectCoverage: true,
+  coverageReporters: ['lcov', 'text'],
 };
