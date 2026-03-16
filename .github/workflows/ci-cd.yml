@@ -7,8 +7,8 @@ on:
     branches: [main]
 
 jobs:
-  sonarcloud:
-    name: SonarCloud Analysis
+  test-unitaire:
+    name: Tests Unitaires
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -16,15 +16,13 @@ jobs:
         with:
           fetch-depth: 0
 
-      # --- Test with coverage (all 4 services) ---
-
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Catalogue — Run tests with JaCoCo coverage
+      - name: Catalogue — Run unit tests with JaCoCo coverage
         run: mvn test -f services/catalogue/pom.xml
 
       - name: Set up Python 3.12
@@ -32,29 +30,87 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Payment — Run tests with pytest-cov
+      - name: Payment — Run unit tests with pytest-cov
         run: |
           pip install -r services/payment/requirements.txt
-          python -m pytest services/payment/tests --cov=services/payment/app --cov-report=xml:services/payment/coverage.xml -v
+          python -m pytest services/payment/tests/test_main.py --cov=services/payment/app --cov-report=xml:services/payment/coverage.xml -v
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
-      - name: Notification — Run tests with Jest coverage
+      - name: Notification — Run unit tests with Jest coverage
         run: |
           cd services/notification
           npm ci
-          npx jest --coverage --coverageReporters=lcov --forceExit --detectOpenHandles
+          npx jest app.test.js --coverage --coverageReporters=lcov --forceExit --detectOpenHandles
 
-      - name: Frontend — Run tests with Jest coverage
+      - name: Frontend — Run unit tests with Jest coverage
         run: |
           cd services/frontend
           npm ci
           npx jest --coverage
 
-      # --- SonarCloud Scan ---
+      - name: Upload coverage reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-reports
+          path: |
+            services/catalogue/target/site/jacoco/jacoco.xml
+            services/payment/coverage.xml
+            services/notification/coverage/lcov.info
+            services/frontend/coverage/lcov.info
+
+  test-integration:
+    name: Tests d'Intégration
+    runs-on: ubuntu-latest
+    needs: test-unitaire
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Payment — Run integration tests
+        run: |
+          pip install -r services/payment/requirements.txt
+          python -m pytest services/payment/tests/test_integration.py -v
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Notification — Run integration tests
+        run: |
+          cd services/notification
+          npm ci
+          npx jest app.integration.test.js --forceExit --detectOpenHandles
+
+  sonarcloud:
+    name: SonarCloud Analysis
+    runs-on: ubuntu-latest
+    needs: test-unitaire
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Download coverage reports
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-reports
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarqube-scan-action@v6
@@ -62,15 +118,11 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: https://sonarcloud.io
 
-      # --- Quality Gate ---
-
       - name: SonarCloud Quality Gate Check
         uses: SonarSource/sonarqube-quality-gate-action@v1
         timeout-minutes: 5
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-
-      # --- Email Notification ---
 
       - name: Send Email Notification
         if: always()
@@ -91,7 +143,7 @@ jobs:
           to: ${{ secrets.NOTIFICATION_EMAIL }}
           from: ${{ secrets.GMAIL_USERNAME }}
 
-  build-and-push:
+  build-push:
     name: Build & Push Docker Images
     runs-on: ubuntu-latest
     needs: sonarcloud
@@ -145,10 +197,10 @@ jobs:
           cache-from: type=gha,scope=notification
           cache-to: type=gha,mode=max,scope=notification
 
-  deploy:
+  deploy-ec2:
     name: Deploy to EC2
     runs-on: ubuntu-latest
-    needs: build-and-push
+    needs: build-push
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
