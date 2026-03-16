@@ -3,6 +3,7 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 
 const app = express();
+app.disable('x-powered-by');
 
 const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:4200,http://localhost:8080').split(',');
 app.use(cors({ origin: allowedOrigins }));
