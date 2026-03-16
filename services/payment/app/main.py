@@ -63,7 +63,7 @@ def list_payments():
     return payments
 
 
-@app.get("/api/payments/{payment_id}")
+@app.get("/api/payments/{payment_id}", responses={404: {"description": "Payment not found"}})
 def get_payment(payment_id: str):
     payment = payments_collection.find_one({"id": payment_id}, {"_id": 0})
     if not payment:

@@ -49,7 +49,7 @@ app.post('/api/notifications', async (req, res, next) => {
     });
 
     await notification.save();
-    console.log(`[NOTIFICATION] Payment ${paymentId} - ${amount} ${currency} - ${status}`);
+    console.log('[NOTIFICATION] Payment received - %s %s - %s', amount, currency, status);
 
     res.status(201).json(formatNotification(notification));
   } catch (err) {

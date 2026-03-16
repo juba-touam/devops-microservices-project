@@ -13,7 +13,7 @@ import { CartItem } from '../../models/product.model';
 export class CartComponent {
   constructor(
     public cartService: CartService,
-    private router: Router
+    private readonly router: Router
   ) {}
 
   get items(): CartItem[] {
