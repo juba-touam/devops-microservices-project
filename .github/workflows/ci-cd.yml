@@ -16,11 +16,80 @@ jobs:
         with:
           fetch-depth: 0
 
+      # --- Test with coverage (all 4 services) ---
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Catalogue — Run tests with JaCoCo coverage
+        run: mvn test -f services/catalogue/pom.xml
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Payment — Run tests with pytest-cov
+        run: |
+          pip install -r services/payment/requirements.txt
+          python -m pytest services/payment/tests --cov=services/payment/app --cov-report=xml:services/payment/coverage.xml -v
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Notification — Run tests with Jest coverage
+        run: |
+          cd services/notification
+          npm ci
+          npx jest --coverage --coverageReporters=lcov --forceExit --detectOpenHandles
+
+      - name: Frontend — Run tests with Jest coverage
+        run: |
+          cd services/frontend
+          npm ci
+          npx jest --coverage
+
+      # --- SonarCloud Scan ---
+
       - name: SonarCloud Scan
         uses: SonarSource/sonarqube-scan-action@v6
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: https://sonarcloud.io
+
+      # --- Quality Gate ---
+
+      - name: SonarCloud Quality Gate Check
+        uses: SonarSource/sonarqube-quality-gate-action@v1
+        timeout-minutes: 5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+      # --- Email Notification ---
+
+      - name: Send Email Notification
+        if: always()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 587
+          username: ${{ secrets.GMAIL_USERNAME }}
+          password: ${{ secrets.GMAIL_APP_PASSWORD }}
+          subject: "SonarCloud Quality Gate — ${{ job.status }} — ${{ github.repository }}"
+          body: |
+            Repository: ${{ github.repository }}
+            Branch: ${{ github.ref_name }}
+            Commit: ${{ github.sha }}
+            Quality Gate Status: ${{ job.status }}
+
+            See details: https://sonarcloud.io/project/overview?id=juba-touam_devops-microservices-project
+          to: ${{ secrets.NOTIFICATION_EMAIL }}
+          from: ${{ secrets.GMAIL_USERNAME }}
 
   build-and-push:
     name: Build & Push Docker Images
