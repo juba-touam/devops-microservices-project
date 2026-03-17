@@ -1,5 +1,5 @@
-FROM python:3.12-slim
-RUN groupadd -r appuser && useradd -r -g appuser appuser
+FROM python:3.12-alpine
+RUN addgroup -S appuser && adduser -S appuser -G appuser
 WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
