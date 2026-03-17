@@ -38,3 +38,4 @@ coverage/
 # Environment
 .env
 *.log
+infra/backend-setup/.terraform/
