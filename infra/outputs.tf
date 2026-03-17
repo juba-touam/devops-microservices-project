@@ -1,3 +1,8 @@
+output "environment" {
+  description = "Current environment name"
+  value       = var.environment
+}
+
 output "instance_public_ip" {
   description = "Public IP address of the EC2 instance"
   value       = aws_instance.microservices.public_ip
