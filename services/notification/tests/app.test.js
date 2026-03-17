@@ -106,4 +106,22 @@ describe('Notification Service', () => {
     expect(res.status).toBe(200);
     expect(res.body).toHaveLength(0);
   });
+
+  test('GET /api/notifications handles error', async () => {
+    Notification.find.mockReturnValue({
+      lean: jest.fn().mockRejectedValue(new Error('DB error')),
+    });
+
+    const res = await request(app).get('/api/notifications');
+    expect(res.status).toBe(500);
+    expect(res.body.error).toBe('Internal server error');
+  });
+
+  test('formatNotification handles plain objects without toObject', async () => {
+    const { formatNotification } = require('../src/app');
+    const result = formatNotification({ _id: 'abc', __v: 0, type: 'payment' });
+    expect(result.id).toBe('abc');
+    expect(result).not.toHaveProperty('_id');
+    expect(result).not.toHaveProperty('__v');
+  });
 });

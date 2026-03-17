@@ -31,8 +31,11 @@ venv/
 infra/.terraform/
 infra/terraform.tfstate
 infra/terraform.tfstate.backup
-*.tfvars
+
+# Coverage reports
+coverage/
 
 # Environment
 .env
 *.log
+infra/backend-setup/.terraform/

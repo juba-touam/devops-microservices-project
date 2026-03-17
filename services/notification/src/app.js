@@ -3,8 +3,10 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 
 const app = express();
+app.disable('x-powered-by');
 
-app.use(cors());
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:4200,http://localhost:8080').split(',');
+app.use(cors({ origin: allowedOrigins }));
 app.use(express.json());
 
 const notificationSchema = new mongoose.Schema({
@@ -20,43 +22,53 @@ const notificationSchema = new mongoose.Schema({
 
 const Notification = mongoose.model('Notification', notificationSchema);
 
+function formatNotification(doc) {
+  const obj = typeof doc.toObject === 'function' ? doc.toObject() : { ...doc };
+  obj.id = obj._id;
+  delete obj._id;
+  delete obj.__v;
+  return obj;
+}
+
 app.get('/api/health', (req, res) => {
   res.json({ status: 'UP', service: 'notification' });
 });
 
-app.post('/api/notifications', async (req, res) => {
-  const { id: paymentId, amount, currency, status, description, items } = req.body;
+app.post('/api/notifications', async (req, res, next) => {
+  try {
+    const { id: paymentId, amount, currency, status, description, items } = req.body;
 
-  const notification = new Notification({
-    type: 'payment',
-    paymentId,
-    amount,
-    currency,
-    status,
-    description,
-    items
-  });
+    const notification = new Notification({
+      type: 'payment',
+      paymentId,
+      amount,
+      currency,
+      status,
+      description,
+      items
+    });
 
-  await notification.save();
-  console.log(`[NOTIFICATION] Payment ${paymentId} - ${amount} ${currency} - ${status}`);
+    await notification.save();
+    console.log('[NOTIFICATION] Payment received - %s %s - %s', amount, currency, status);
 
-  const result = notification.toObject();
-  result.id = result._id;
-  delete result._id;
-  delete result.__v;
-
-  res.status(201).json(result);
+    res.status(201).json(formatNotification(notification));
+  } catch (err) {
+    next(err);
+  }
 });
 
-app.get('/api/notifications', async (req, res) => {
-  const notifications = await Notification.find({}).lean();
-  const result = notifications.map(n => {
-    n.id = n._id;
-    delete n._id;
-    delete n.__v;
-    return n;
-  });
-  res.json(result);
+app.get('/api/notifications', async (req, res, next) => {
+  try {
+    const notifications = await Notification.find({}).lean();
+    res.json(notifications.map(formatNotification));
+  } catch (err) {
+    next(err);
+  }
 });
 
-module.exports = { app, Notification };
+app.use((err, req, res, _next) => {
+  console.error('[ERROR]', err.message);
+  res.status(500).json({ error: 'Internal server error' });
+});
+
+module.exports = { app, Notification, formatNotification };

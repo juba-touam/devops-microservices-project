@@ -7,6 +7,14 @@ terraform {
       version = "~> 5.0"
     }
   }
+
+  backend "s3" {
+    bucket         = "devops-microservices-terraform-state"
+    key            = "infra/terraform.tfstate"
+    region         = "eu-west-3"
+    dynamodb_table = "terraform-lock"
+    encrypt        = true
+  }
 }
 
 provider "aws" {
@@ -19,7 +27,7 @@ resource "aws_vpc" "main" {
   enable_dns_hostnames = true
 
   tags = {
-    Name = "microservices-vpc"
+    Name = "microservices-vpc-${var.environment}"
   }
 }
 
@@ -30,7 +38,7 @@ resource "aws_subnet" "public" {
   map_public_ip_on_launch = true
 
   tags = {
-    Name = "microservices-public-subnet"
+    Name = "microservices-public-subnet-${var.environment}"
   }
 }
 
@@ -38,7 +46,7 @@ resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.main.id
 
   tags = {
-    Name = "microservices-igw"
+    Name = "microservices-igw-${var.environment}"
   }
 }
 
@@ -51,7 +59,7 @@ resource "aws_route_table" "public" {
   }
 
   tags = {
-    Name = "microservices-public-rt"
+    Name = "microservices-public-rt-${var.environment}"
   }
 }
 
@@ -62,7 +70,7 @@ resource "aws_route_table_association" "public" {
 
 
 resource "aws_security_group" "ec2_sg" {
-  name        = "microservices-sg"
+  name        = "microservices-sg-${var.environment}"
   description = "Allow SSH, HTTP and microservices ports"
   vpc_id      = aws_vpc.main.id
 
@@ -122,7 +130,7 @@ resource "aws_security_group" "ec2_sg" {
   }
 
   tags = {
-    Name = "microservices-sg"
+    Name = "microservices-sg-${var.environment}"
   }
 }
 
@@ -146,7 +154,7 @@ data "aws_ami" "ubuntu" {
 
 resource "aws_instance" "microservices" {
   ami                    = data.aws_ami.ubuntu.id
-  instance_type = var.instance_type
+  instance_type          = var.instance_type
   key_name               = var.key_name
   subnet_id              = aws_subnet.public.id
   vpc_security_group_ids = [aws_security_group.ec2_sg.id]
@@ -161,6 +169,6 @@ resource "aws_instance" "microservices" {
   }
 
   tags = {
-    Name = "microservices-ec2"
+    Name = "microservices-ec2-${var.environment}"
   }
 }

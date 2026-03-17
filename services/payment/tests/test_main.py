@@ -1,5 +1,6 @@
 from unittest.mock import patch, MagicMock
 import sys
+import pytest
 
 # Patch MongoClient before importing the app module (it connects at import time)
 mock_mongo_client = MagicMock()
@@ -13,8 +14,16 @@ with patch("pymongo.MongoClient", return_value=mock_mongo_client):
     sys.modules.pop("app.main", None)
     from fastapi.testclient import TestClient
     from app.main import app
+    import app.main as app_module
 
 client = TestClient(app)
+
+
+@pytest.fixture(autouse=True)
+def _reset_mock_collection():
+    """Reset mock collection before each test to avoid interference from integration tests."""
+    app_module.payments_collection = mock_collection
+    mock_collection.reset_mock()
 
 
 class TestHealth:
@@ -76,7 +85,7 @@ class TestCreatePayment:
     @patch("app.main.uuid.uuid4", return_value="test-uuid-2")
     def test_notification_failure(self, _mock_uuid, mock_httpx_cls):
         mock_http = MagicMock()
-        mock_http.post.side_effect = Exception("connection refused")
+        mock_http.post.side_effect = OSError("connection refused")
         mock_httpx_cls.return_value.__enter__ = MagicMock(return_value=mock_http)
         mock_httpx_cls.return_value.__exit__ = MagicMock(return_value=False)
 

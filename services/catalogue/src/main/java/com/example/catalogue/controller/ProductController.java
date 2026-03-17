@@ -2,11 +2,11 @@ package com.example.catalogue.controller;
 
 import com.example.catalogue.model.Product;
 import com.example.catalogue.repository.ProductRepository;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api")
@@ -29,8 +29,9 @@ public class ProductController {
     }
 
     @GetMapping("/catalogue/{id}")
-    public Object getCatalogueItem(@PathVariable int id) {
-        Optional<Product> item = productRepository.findById(id);
-        return item.<Object>map(p -> p).orElse(Map.of("error", "Item not found"));
+    public ResponseEntity<?> getCatalogueItem(@PathVariable int id) {
+        return productRepository.findById(id)
+                .<ResponseEntity<?>>map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 }

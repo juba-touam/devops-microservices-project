@@ -18,8 +18,8 @@ export class CatalogueComponent implements OnInit {
   toastVisible = false;
 
   constructor(
-    private catalogueService: CatalogueService,
-    private cartService: CartService
+    private readonly catalogueService: CatalogueService,
+    private readonly cartService: CartService
   ) {}
 
   ngOnInit(): void {
