@@ -3,7 +3,7 @@ RUN apk update && apk upgrade --no-cache && rm -rf /var/cache/apk/*
 RUN addgroup -S appuser && adduser -S appuser -G appuser
 WORKDIR /app
 COPY requirements.txt .
-RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
+RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 COPY app ./app
 RUN chown -R appuser:appuser /app
