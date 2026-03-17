@@ -1,4 +1,6 @@
 FROM node:20-alpine
+RUN apk update && apk upgrade --no-cache && rm -rf /var/cache/apk/*
+RUN npm install -g npm@latest
 RUN addgroup -S appuser && adduser -S appuser -G appuser
 WORKDIR /app
 COPY package*.json ./
