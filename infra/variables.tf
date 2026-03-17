@@ -19,3 +19,9 @@ variable "key_name" {
   description = "Name of the AWS key pair for SSH access"
   type        = string
 }
+
+variable "github_repo" {
+  description = "GitHub repository (owner/repo)"
+  type        = string
+  default     = "juba-touam/devops-microservices-project"
+}

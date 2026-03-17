@@ -2,9 +2,13 @@ name: CI Pipeline
 
 on:
   push:
-    branches: [main]
+    branches: [main, dev, staging]
   pull_request:
-    branches: [main]
+    branches: [main, dev, staging]
+
+permissions:
+  id-token: write
+  contents: read
 
 jobs:
   test-unitaire:
@@ -167,7 +171,7 @@ jobs:
     name: Build & Push Docker Images
     runs-on: ubuntu-latest
     needs: sonarcloud
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: github.event_name == 'push'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -221,7 +225,7 @@ jobs:
     name: Trivy Security Scan
     runs-on: ubuntu-latest
     needs: build-push
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: github.event_name == 'push'
     steps:
       - name: Scan Catalogue Image
         uses: aquasecurity/trivy-action@master
@@ -255,10 +259,40 @@ jobs:
           exit-code: 1
           format: table
 
+  resolve-secrets:
+    name: Resolve AWS Secrets
+    runs-on: ubuntu-latest
+    needs: trivy-scan
+    outputs:
+      ec2_host: ${{ steps.secrets.outputs.ec2_host }}
+      ec2_user: ${{ steps.secrets.outputs.ec2_user }}
+      ec2_ssh_key: ${{ steps.secrets.outputs.ec2_ssh_key }}
+    env:
+      ENV_NAME: ${{ github.ref == 'refs/heads/main' && 'prod' || github.ref == 'refs/heads/staging' && 'staging' || 'dev' }}
+    steps:
+      - name: Configure AWS Credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::699475947506:role/github-actions-${{ env.ENV_NAME }}
+          aws-region: eu-west-3
+
+      - name: Fetch secrets from AWS Secrets Manager
+        id: secrets
+        run: |
+          get_secret() {
+            aws secretsmanager get-secret-value --secret-id "microservices/${{ env.ENV_NAME }}/$1" --query SecretString --output text
+          }
+          echo "ec2_host=$(get_secret ec2_host)" >> $GITHUB_OUTPUT
+          echo "ec2_user=$(get_secret ec2_user)" >> $GITHUB_OUTPUT
+          EC2_SSH_KEY=$(get_secret ec2_ssh_key)
+          echo "ec2_ssh_key<<EOF" >> $GITHUB_OUTPUT
+          echo "$EC2_SSH_KEY" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
   deploy-ec2:
     name: Deploy to EC2
     runs-on: ubuntu-latest
-    needs: trivy-scan
+    needs: resolve-secrets
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -266,18 +300,18 @@ jobs:
       - name: Copy docker-compose.prod.yml to EC2
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
+          host: ${{ needs.resolve-secrets.outputs.ec2_host }}
+          username: ${{ needs.resolve-secrets.outputs.ec2_user }}
+          key: ${{ needs.resolve-secrets.outputs.ec2_ssh_key }}
           source: docker-compose.prod.yml
           target: ~/app
 
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1
         with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
+          host: ${{ needs.resolve-secrets.outputs.ec2_host }}
+          username: ${{ needs.resolve-secrets.outputs.ec2_user }}
+          key: ${{ needs.resolve-secrets.outputs.ec2_ssh_key }}
           script: |
             cd ~/app
             echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
