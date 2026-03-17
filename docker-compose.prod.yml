@@ -14,6 +14,10 @@ services:
       - "8080:8080"
     depends_on:
       - mongo
+    environment:
+      - MONGO_URI=${MONGO_URI}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
     networks:
       - microservices
 
@@ -24,6 +28,10 @@ services:
     depends_on:
       - mongo
       - notification
+    environment:
+      - MONGO_URI=${MONGO_URI}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
+      - NOTIFICATION_URL=${NOTIFICATION_URL}
     networks:
       - microservices
 
@@ -33,6 +41,10 @@ services:
       - "3001:3001"
     depends_on:
       - mongo
+    environment:
+      - MONGO_URI=${MONGO_URI}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
+      - NODE_ENV=${NODE_ENV}
     networks:
       - microservices
 
