@@ -202,6 +202,7 @@ jobs:
           context: ./services/catalogue
           push: true
           tags: jubatouam/catalogue:${{ github.sha }}
+          build-args: CACHEBUST=${{ github.run_id }}
           cache-from: type=gha,scope=catalogue
           cache-to: type=gha,mode=max,scope=catalogue
 

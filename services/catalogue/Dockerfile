@@ -6,6 +6,7 @@ COPY src ./src
 RUN mvn package -DskipTests -B
 
 FROM eclipse-temurin:17-jre-alpine
+ARG CACHEBUST=1
 RUN apk update && apk upgrade --no-cache && rm -rf /var/cache/apk/*
 RUN addgroup -S appuser && adduser -S appuser -G appuser
 WORKDIR /app
