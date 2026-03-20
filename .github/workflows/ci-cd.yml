@@ -132,50 +132,28 @@ jobs:
           echo "=== Notification lcov.info paths ==="
           head -5 services/notification/coverage/lcov.info || true
 
-      - name: Debug SONAR_TOKEN
-        run: |
-          if [ -z "$SONAR_TOKEN" ]; then
-            echo "SONAR_TOKEN is EMPTY"
-            exit 1
-          else
-            echo "SONAR_TOKEN is set (length: ${#SONAR_TOKEN})"
-            echo "First 4 chars: ${SONAR_TOKEN:0:4}..."
-          fi
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-
-      - name: SonarCloud Scan (without Quality Gate)
+      - name: SonarCloud Scan
         uses: SonarSource/sonarqube-scan-action@v6
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: https://sonarcloud.io
 
-      - name: Debug - Check project via API
+      - name: SonarCloud Quality Gate Check
         run: |
-          echo "=== Check project exists ==="
-          curl -s -u "$SONAR_TOKEN:" "https://sonarcloud.io/api/project_analyses/search?project=juba-touam_devops-microservices-project" | head -200
-          echo ""
-          echo "=== Check component ==="
-          curl -s -u "$SONAR_TOKEN:" "https://sonarcloud.io/api/components/show?component=juba-touam_devops-microservices-project" | head -200
-          echo ""
-          echo "=== Check Quality Gate status ==="
-          curl -s -u "$SONAR_TOKEN:" "https://sonarcloud.io/api/qualitygates/project_status?projectKey=juba-touam_devops-microservices-project" | head -200
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-
-      - name: Quality Gate Check
-        run: |
-          echo "Waiting 10s for analysis to be processed..."
-          sleep 10
-          STATUS=$(curl -s -u "$SONAR_TOKEN:" "https://sonarcloud.io/api/qualitygates/project_status?projectKey=juba-touam_devops-microservices-project" | python3 -c "import sys,json; print(json.load(sys.stdin).get('projectStatus',{}).get('status','UNKNOWN'))")
+          echo "Waiting for analysis to be processed..."
+          sleep 15
+          RESPONSE=$(curl -s -u "$SONAR_TOKEN:" "https://sonarcloud.io/api/qualitygates/project_status?projectKey=juba-touam_devops-microservices-project")
+          STATUS=$(echo "$RESPONSE" | python3 -c "import sys,json; print(json.load(sys.stdin).get('projectStatus',{}).get('status','UNKNOWN'))")
           echo "Quality Gate Status: $STATUS"
-          if [ "$STATUS" = "ERROR" ]; then
-            echo "Quality Gate FAILED"
-            exit 1
-          elif [ "$STATUS" = "OK" ]; then
+          if [ "$STATUS" = "OK" ]; then
             echo "Quality Gate PASSED"
+          elif [ "$STATUS" = "ERROR" ]; then
+            echo "Quality Gate FAILED"
+            echo "$RESPONSE" | python3 -m json.tool
+            exit 1
           else
-            echo "Could not determine Quality Gate status: $STATUS"
+            echo "Could not determine Quality Gate status"
+            echo "$RESPONSE"
             exit 1
           fi
         env:
