@@ -134,22 +134,52 @@ jobs:
 
       - name: Debug SONAR_TOKEN
         run: |
-          if [ -z "${{ secrets.SONAR_TOKEN }}" ]; then
-            echo "❌ SONAR_TOKEN is EMPTY"
+          if [ -z "$SONAR_TOKEN" ]; then
+            echo "SONAR_TOKEN is EMPTY"
+            exit 1
           else
-            echo "✅ SONAR_TOKEN is set (length: ${#SONAR_TOKEN})"
+            echo "SONAR_TOKEN is set (length: ${#SONAR_TOKEN})"
+            echo "First 4 chars: ${SONAR_TOKEN:0:4}..."
           fi
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
-      - name: SonarCloud Scan
+      - name: SonarCloud Scan (without Quality Gate)
         uses: SonarSource/sonarqube-scan-action@v6
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: https://sonarcloud.io
-        with:
-          args: >
-            -Dsonar.qualitygate.wait=true
+
+      - name: Debug - Check project via API
+        run: |
+          echo "=== Check project exists ==="
+          curl -s -u "$SONAR_TOKEN:" "https://sonarcloud.io/api/project_analyses/search?project=juba-touam_devops-microservices-project" | head -200
+          echo ""
+          echo "=== Check component ==="
+          curl -s -u "$SONAR_TOKEN:" "https://sonarcloud.io/api/components/show?component=juba-touam_devops-microservices-project" | head -200
+          echo ""
+          echo "=== Check Quality Gate status ==="
+          curl -s -u "$SONAR_TOKEN:" "https://sonarcloud.io/api/qualitygates/project_status?projectKey=juba-touam_devops-microservices-project" | head -200
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+      - name: Quality Gate Check
+        run: |
+          echo "Waiting 10s for analysis to be processed..."
+          sleep 10
+          STATUS=$(curl -s -u "$SONAR_TOKEN:" "https://sonarcloud.io/api/qualitygates/project_status?projectKey=juba-touam_devops-microservices-project" | python3 -c "import sys,json; print(json.load(sys.stdin).get('projectStatus',{}).get('status','UNKNOWN'))")
+          echo "Quality Gate Status: $STATUS"
+          if [ "$STATUS" = "ERROR" ]; then
+            echo "Quality Gate FAILED"
+            exit 1
+          elif [ "$STATUS" = "OK" ]; then
+            echo "Quality Gate PASSED"
+          else
+            echo "Could not determine Quality Gate status: $STATUS"
+            exit 1
+          fi
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
       - name: Send Email Notification
         if: always()
