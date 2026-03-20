@@ -135,7 +135,7 @@ jobs:
       - name: SonarCloud Scan
         uses: SonarSource/sonarqube-scan-action@v6
         env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR }}
           SONAR_HOST_URL: https://sonarcloud.io
 
       - name: SonarCloud Quality Gate Check
@@ -157,7 +157,7 @@ jobs:
             exit 1
           fi
         env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR }}
 
       - name: Send Email Notification
         if: always()
