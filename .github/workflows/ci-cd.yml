@@ -132,6 +132,16 @@ jobs:
           echo "=== Notification lcov.info paths ==="
           head -5 services/notification/coverage/lcov.info || true
 
+      - name: Debug SONAR_TOKEN
+        run: |
+          if [ -z "${{ secrets.SONAR_TOKEN }}" ]; then
+            echo "❌ SONAR_TOKEN is EMPTY"
+          else
+            echo "✅ SONAR_TOKEN is set (length: ${#SONAR_TOKEN})"
+          fi
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
       - name: SonarCloud Scan
         uses: SonarSource/sonarqube-scan-action@v6
         env:
