@@ -2,9 +2,9 @@ name: CI Pipeline
 
 on:
   push:
-    branches: [main]
+    branches: [main, dev, staging]
   pull_request:
-    branches: [main]
+    branches: [main, dev, staging]
 
 jobs:
   test-unitaire:
@@ -139,8 +139,23 @@ jobs:
           SONAR_HOST_URL: https://sonarcloud.io
 
       - name: SonarCloud Quality Gate Check
-        uses: SonarSource/sonarqube-quality-gate-action@v1
-        timeout-minutes: 5
+        run: |
+          echo "Waiting for analysis to be processed..."
+          sleep 15
+          RESPONSE=$(curl -s -u "$SONAR_TOKEN:" "https://sonarcloud.io/api/qualitygates/project_status?projectKey=juba-touam_devops-microservices-project")
+          STATUS=$(echo "$RESPONSE" | python3 -c "import sys,json; print(json.load(sys.stdin).get('projectStatus',{}).get('status','UNKNOWN'))")
+          echo "Quality Gate Status: $STATUS"
+          if [ "$STATUS" = "OK" ]; then
+            echo "Quality Gate PASSED"
+          elif [ "$STATUS" = "ERROR" ]; then
+            echo "Quality Gate FAILED"
+            echo "$RESPONSE" | python3 -m json.tool
+            exit 1
+          else
+            echo "Could not determine Quality Gate status"
+            echo "$RESPONSE"
+            exit 1
+          fi
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
@@ -167,7 +182,7 @@ jobs:
     name: Build & Push Docker Images
     runs-on: ubuntu-latest
     needs: sonarcloud
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: github.event_name == 'push'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -187,6 +202,7 @@ jobs:
           context: ./services/catalogue
           push: true
           tags: jubatouam/catalogue:${{ github.sha }}
+          build-args: CACHEBUST=${{ github.run_id }}
           cache-from: type=gha,scope=catalogue
           cache-to: type=gha,mode=max,scope=catalogue
 
@@ -196,6 +212,7 @@ jobs:
           context: ./services/frontend
           push: true
           tags: jubatouam/frontend:${{ github.sha }}
+          build-args: CACHEBUST=${{ github.run_id }}
           cache-from: type=gha,scope=frontend
           cache-to: type=gha,mode=max,scope=frontend
 
@@ -205,6 +222,7 @@ jobs:
           context: ./services/payment
           push: true
           tags: jubatouam/payment:${{ github.sha }}
+          build-args: CACHEBUST=${{ github.run_id }}
           cache-from: type=gha,scope=payment
           cache-to: type=gha,mode=max,scope=payment
 
@@ -214,6 +232,7 @@ jobs:
           context: ./services/notification
           push: true
           tags: jubatouam/notification:${{ github.sha }}
+          build-args: CACHEBUST=${{ github.run_id }}
           cache-from: type=gha,scope=notification
           cache-to: type=gha,mode=max,scope=notification
 
@@ -221,7 +240,7 @@ jobs:
     name: Trivy Security Scan
     runs-on: ubuntu-latest
     needs: build-push
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: github.event_name == 'push'
     steps:
       - name: Scan Catalogue Image
         uses: aquasecurity/trivy-action@master
@@ -255,10 +274,43 @@ jobs:
           exit-code: 1
           format: table
 
+  resolve-secrets:
+    name: Resolve AWS Secrets
+    runs-on: ubuntu-latest
+    needs: trivy-scan
+    permissions:
+      id-token: write
+      contents: read
+    outputs:
+      ec2_host: ${{ steps.secrets.outputs.ec2_host }}
+      ec2_user: ${{ steps.secrets.outputs.ec2_user }}
+      ec2_ssh_key: ${{ steps.secrets.outputs.ec2_ssh_key }}
+    env:
+      ENV_NAME: ${{ github.ref == 'refs/heads/main' && 'prod' || github.ref == 'refs/heads/staging' && 'staging' || 'dev' }}
+    steps:
+      - name: Configure AWS Credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::699475947506:role/github-actions-${{ env.ENV_NAME }}
+          aws-region: eu-west-3
+
+      - name: Fetch secrets from AWS Secrets Manager
+        id: secrets
+        run: |
+          get_secret() {
+            aws secretsmanager get-secret-value --secret-id "microservices/${{ env.ENV_NAME }}/$1" --query SecretString --output text
+          }
+          echo "ec2_host=$(get_secret ec2_host)" >> $GITHUB_OUTPUT
+          echo "ec2_user=$(get_secret ec2_user)" >> $GITHUB_OUTPUT
+          EC2_SSH_KEY=$(get_secret ec2_ssh_key)
+          echo "ec2_ssh_key<<EOF" >> $GITHUB_OUTPUT
+          echo "$EC2_SSH_KEY" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
   deploy-ec2:
     name: Deploy to EC2
     runs-on: ubuntu-latest
-    needs: trivy-scan
+    needs: resolve-secrets
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -266,21 +318,26 @@ jobs:
       - name: Copy docker-compose.prod.yml to EC2
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
+          host: ${{ needs.resolve-secrets.outputs.ec2_host }}
+          username: ${{ needs.resolve-secrets.outputs.ec2_user }}
+          key: ${{ needs.resolve-secrets.outputs.ec2_ssh_key }}
           source: docker-compose.prod.yml
           target: ~/app
 
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1
         with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
+          host: ${{ needs.resolve-secrets.outputs.ec2_host }}
+          username: ${{ needs.resolve-secrets.outputs.ec2_user }}
+          key: ${{ needs.resolve-secrets.outputs.ec2_ssh_key }}
           script: |
             cd ~/app
             echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
-            export IMAGE_TAG=${{ github.sha }}
+            echo "IMAGE_TAG=${{ github.sha }}" > .env
+            echo "MONGO_URI=mongodb://mongo:27017" >> .env
+            echo "ALLOWED_ORIGINS=*" >> .env
+            echo "SPRING_PROFILES_ACTIVE=prod" >> .env
+            echo "NOTIFICATION_URL=http://notification:3001" >> .env
+            echo "NODE_ENV=production" >> .env
             docker compose -f docker-compose.prod.yml pull
             docker compose -f docker-compose.prod.yml up -d

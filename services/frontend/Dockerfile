@@ -6,6 +6,7 @@ COPY . .
 RUN npx ng build --configuration production
 
 FROM nginx:alpine
+ARG CACHEBUST=1
 RUN apk update && apk upgrade --no-cache && rm -rf /var/cache/apk/*
 RUN addgroup -S appuser && adduser -S appuser -G appuser
 COPY nginx.conf /etc/nginx/conf.d/default.conf
