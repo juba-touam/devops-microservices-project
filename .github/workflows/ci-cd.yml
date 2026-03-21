@@ -212,6 +212,7 @@ jobs:
           context: ./services/frontend
           push: true
           tags: jubatouam/frontend:${{ github.sha }}
+          build-args: CACHEBUST=${{ github.run_id }}
           cache-from: type=gha,scope=frontend
           cache-to: type=gha,mode=max,scope=frontend
 
@@ -221,6 +222,7 @@ jobs:
           context: ./services/payment
           push: true
           tags: jubatouam/payment:${{ github.sha }}
+          build-args: CACHEBUST=${{ github.run_id }}
           cache-from: type=gha,scope=payment
           cache-to: type=gha,mode=max,scope=payment
 
@@ -230,6 +232,7 @@ jobs:
           context: ./services/notification
           push: true
           tags: jubatouam/notification:${{ github.sha }}
+          build-args: CACHEBUST=${{ github.run_id }}
           cache-from: type=gha,scope=notification
           cache-to: type=gha,mode=max,scope=notification
 
