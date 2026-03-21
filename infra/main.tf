@@ -150,6 +150,17 @@ data "aws_ami" "ubuntu" {
   }
 }
 
+# --- Elastic IP ---
+
+resource "aws_eip" "microservices" {
+  instance = aws_instance.microservices.id
+  domain   = "vpc"
+
+  tags = {
+    Name = "microservices-eip-${var.environment}"
+  }
+}
+
 # --- EC2 Instance ---
 
 resource "aws_instance" "microservices" {

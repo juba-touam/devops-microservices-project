@@ -4,8 +4,8 @@ output "environment" {
 }
 
 output "instance_public_ip" {
-  description = "Public IP address of the EC2 instance"
-  value       = aws_instance.microservices.public_ip
+  description = "Public IP address of the EC2 instance (Elastic IP)"
+  value       = aws_eip.microservices.public_ip
 }
 
 output "instance_id" {

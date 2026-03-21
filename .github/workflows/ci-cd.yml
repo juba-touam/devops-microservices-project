@@ -333,6 +333,13 @@ jobs:
           script: |
             cd ~/app
             echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
-            export IMAGE_TAG=${{ github.sha }}
+            cat > .env <<ENVEOF
+IMAGE_TAG=${{ github.sha }}
+MONGO_URI=mongodb://mongo:27017/microservices_db
+ALLOWED_ORIGINS=*
+SPRING_PROFILES_ACTIVE=prod
+NOTIFICATION_URL=http://notification:3001
+NODE_ENV=production
+ENVEOF
             docker compose -f docker-compose.prod.yml pull
             docker compose -f docker-compose.prod.yml up -d
